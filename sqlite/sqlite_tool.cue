@@ -13,7 +13,7 @@ command: sql: {
     writeTables: [for table in sqlModel.tables {
         file.Create & {
             filename: "\(mkTemp.path)/\(table.name).csv"
-            contents: csv.Encode(list.Concat([[table.headers], table.values]))
+            contents: csv.Encode(list.Concat([[[for column in table.columns {column.name}]], table.rawValues]))
         }
     }]
 
