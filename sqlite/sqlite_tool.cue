@@ -7,27 +7,20 @@ import (
     "encoding/csv"
 )
 
-tables: {
-    "users": users
-}
-
 command: sql: {
     mkTemp: file.MkdirTemp
 
-    writeTables: [for name, table in tables {
+    writeTables: [for table in sqlModel.tables {
         file.Create & {
-            filename: "\(mkTemp.path)/\(name).csv"
-            contents: csv.Encode([
-                [for k, _ in table[0] {k}],
-                [for item in table for v in item {v}]
-            ])
+            filename: "\(mkTemp.path)/\(table.name).csv"
+            contents: csv.Encode(list.Concat([[table.headers], table.values]))
         }
     }]
 
     execute: exec.Run & {
         $dependsOn: [writeTables]
         mustSucceed: false
-        cmd: list.Concat([["sqlite3", ":memory:", "-header", "-table"], list.FlattenN([for name, _ in tables {["-cmd", ".import \(mkTemp.path)/\(name).csv \(name) --csv"]}], 1)])
+        cmd: list.Concat([["sqlite3", ":memory:", "-header", "-table"], list.FlattenN([for table in sqlModel.tables {["-cmd", ".import \(mkTemp.path)/\(table.name).csv \(table.name) --csv"]}], 1)])
     }
 
     clean: file.RemoveAll & {
