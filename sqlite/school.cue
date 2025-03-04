@@ -1,13 +1,17 @@
 package sqlite
 
+import (
+    "strconv"
+)
+
 #Course: {
-    id: string
+    id: int
     name: string
     tags: [...string]
 }
 
 #Student: {
-    id: string
+    id: int
     familyName: string
     givenName: string
 }
@@ -18,13 +22,13 @@ package sqlite
     note: string
 }
 
-_coursesById: [ID=string]: #Course & {id: ID}
+_coursesById: [ID=string]: #Course & {id: strconv.ParseInt(ID, 10, 32)}
 courses: [for course in _coursesById {course}]
 
-_studentsById: [ID=string]: #Student & {id: ID}
+_studentsById: [ID=string]: #Student & {id: strconv.ParseInt(ID, 10, 32)}
 students: [for student in _studentsById {student}]
 
-_enrolmentsByStudentByCourse: [StudentId=#Student.id]: [CourseId=#Course.id]: #Enrolment & {
+_enrolmentsByStudentByCourse: [StudentId=string]: [CourseId=string]: #Enrolment & {
     course: _coursesById[CourseId]
     student: _studentsById[StudentId]
 }
@@ -52,14 +56,13 @@ _studentsById: {
     }
 }
 
- _enrolmentsByStudentByCourse: (_studentsById["1"].id): (_coursesById["1"].id): note: "Test"
-// _enrolmentsByStudentByCourse: {for enrolment in _enrolmentsByStudentByCourseList {(enrolment.student.id): (enrolment.course.id): {enrolment}}}
+_enrolmentsByStudentByCourse: {for enrolment in _enrolmentsByStudentByCourseList {"\(enrolment.student.id)": "\(enrolment.course.id)": {enrolment}}}
 
 _enrolmentsByStudentByCourseList: [...#Enrolment]
 _enrolmentsByStudentByCourseList: [
     {
         student: _studentsById["1"]
         course: _coursesById["1"]
-        note: "test"
+        note: "Special admission"
     }
 ]
