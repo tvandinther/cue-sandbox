@@ -5,42 +5,41 @@ import (
 )
 
 #Value: {
-    CUEValue: string | bool | float | int | bytes | null
-    SQLiteDataType: "TEXT" | "REAL" | "INTEGER" | "BLOB" | "NULL"
-    value: _ | *CUEValue
+    cue: string | bool | float | int | bytes | null
+    sqliteType: "TEXT" | "REAL" | "INTEGER" | "BLOB" | "NULL"
+    sqlite: _ | *cue
 
-    if (CUEValue & string) != _|_ {
-        SQLiteDataType: "TEXT"
+    if (cue & string) != _|_ {
+        sqliteType: "TEXT"
     }
-    if (CUEValue & bool) != _|_ {
-        SQLiteDataType: "INTEGER"
-        if CUEValue {
-            value: 1
+    if (cue & bool) != _|_ {
+        sqliteType: "INTEGER"
+        if cue {
+            sqlite: 1
         }
-        if !CUEValue {
-            value: 0
+        if !cue {
+            sqlite: 0
         }
     }
-    if (CUEValue & float) != _|_ {
-        SQLiteDataType: "REAL"
+    if (cue & float) != _|_ {
+        sqliteType: "REAL"
     }
-    if (CUEValue & int) != _|_ {
-        SQLiteDataType: "INTEGER"
+    if (cue & int) != _|_ {
+        sqliteType: "INTEGER"
     }
-    if (CUEValue & bytes) != _|_ {
-        SQLiteDataType: "BLOB"
+    if (cue & bytes) != _|_ {
+        sqliteType: "BLOB"
     }
-    if (CUEValue & null) != _|_ {
-        SQLiteDataType: "NULL"
+    if (cue & null) != _|_ {
+        sqliteType: "NULL"
     }
 }
 
 #Table: {
     name: string
-    // headers: [...string]
-    columns: [...{name: string, valueMetadata: #Value, ...}]
+    columns: [...{name: string, valueMetadata: #Value}]
     values: [...[...#Value]]
-    rawValues: [for row in values {[for value in row {value.value}]}]
+    sqliteValues: [for row in values {[for value in row {value.sqlite}]}]
 }
 
 #SQL: {
@@ -56,11 +55,11 @@ import (
                 [
                     if (v & {...}) != _|_ { // if is struct
                         name: "\(k)_id"
-                        valueMetadata: #Value & {CUEValue: v.id}
+                        valueMetadata: #Value & {cue: v.id}
                     },
                     { // else
                         name: k
-                        valueMetadata: #Value & {CUEValue: v}
+                        valueMetadata: #Value & {cue: v}
                     }
                 ][0]
             }]
@@ -68,10 +67,10 @@ import (
                 [for v in item if (v & [..._]) == _|_ {
                     [
                         if (v & {...}) != _|_ { // if is struct
-                            #Value & {CUEValue: v.id}
+                            #Value & {cue: v.id}
                         },
                         { // else
-                            #Value & {CUEValue: v}
+                            #Value & {cue: v}
                         }
                     ][0]
                 }]
@@ -84,13 +83,13 @@ import (
             name: "\(sourceName)_\(key)"
             columns: [{
                 name: "\(sourceName)_id"
-                valueMetadata: #Value & {CUEValue: source[0].id}
+                valueMetadata: #Value & {cue: source[0].id}
             }, {
                 name: key
-                valueMetadata: #Value & {CUEValue: value[0]}
+                valueMetadata: #Value & {cue: value[0]}
             }]
             values: [for row in source for field in row if (field & [..._]) != _|_ for v in field {
-                [#Value & {CUEValue: row.id}, #Value & {CUEValue: v}]
+                [#Value & {cue: row.id}, #Value & {cue: v}]
             }]
         }
     }]
