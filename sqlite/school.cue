@@ -14,6 +14,7 @@ import (
     id: int
     familyName: string
     givenName: string
+    graduated: bool | *false
 }
 
 #Enrolment: {
@@ -22,10 +23,12 @@ import (
     note: string
 }
 
-_coursesById: [ID=string]: #Course & {id: strconv.ParseInt(ID, 10, 32)}
+// _coursesById is not yet closed. Consider changing to definition
+_coursesById: [ID= =~ "\\d+"]: #Course & {id: strconv.ParseInt(ID, 10, 32)}
 courses: [for course in _coursesById {course}]
 
-_studentsById: [ID=string]: #Student & {id: strconv.ParseInt(ID, 10, 32)}
+// _studentsById is not yet closed. Consider changing to definition
+_studentsById: [ID= =~ "\\d+"]: #Student & {id: strconv.ParseInt(ID, 10, 32)}
 students: [for student in _studentsById {student}]
 
 _enrolmentsByStudentByCourse: [StudentId=string]: [CourseId=string]: #Enrolment & {
@@ -49,6 +52,7 @@ _studentsById: {
     "1": {
         familyName: "Doe"
         givenName: "John"
+        graduated: true
     }
     "2": {
         familyName: "Doe"

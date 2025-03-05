@@ -2,6 +2,7 @@ package sqlite
 
 import (
     "list"
+    "strings"
 )
 
 #Value: {
@@ -11,6 +12,9 @@ import (
 
     if (cue & string) != _|_ {
         sqliteType: "TEXT"
+    }
+    if (cue & int) != _|_ {
+        sqliteType: "INTEGER"
     }
     if (cue & bool) != _|_ {
         sqliteType: "INTEGER"
@@ -23,9 +27,6 @@ import (
     }
     if (cue & float) != _|_ {
         sqliteType: "REAL"
-    }
-    if (cue & int) != _|_ {
-        sqliteType: "INTEGER"
     }
     if (cue & bytes) != _|_ {
         sqliteType: "BLOB"
@@ -43,8 +44,9 @@ import (
 }
 
 #SQL: {
-    sources: [SourceName=string]: [...{...}] & list.MinItems(1)
+    sources: [SourceName=string]: [...{...}] & list.MinItems(1) // must have at least one record/row for inference
     tables: [...#Table]
+    tableDDL: [...string]
 
     tables: list.Concat([_entity, _associative])
 
@@ -63,8 +65,8 @@ import (
                     }
                 ][0]
             }]
-            values: [for item in source {
-                [for v in item if (v & [..._]) == _|_ {
+            values: [for row in source {
+                [for k, v in row if (v & [..._]) == _|_ {
                     [
                         if (v & {...}) != _|_ { // if is struct
                             #Value & {cue: v.id}
@@ -93,6 +95,30 @@ import (
             }]
         }
     }]
+
+    tableDDL: [for table in tables {
+        let columns = strings.Join([for column in table.columns {"\(column.name) \(column.valueMetadata.sqliteType)"}], ", ")
+        
+        """
+        CREATE TABLE \(table.name) (\(columns));
+        """
+    }]
+
+    // inserts: [for table in tables {
+    //     let columnSeperator = ",\n"
+    //     let valueSeperator = ", "
+
+    //     let columns = strings.Join([for column in table.columns {column.name}], columnSeperator)
+    //     let values = strings.Join([for row in table.values {"(\(strings.Join([for value in row {"\(value.sqlite)"}], valueSeperator)))"}], columnSeperator)
+
+    //     """
+    //     INSERT INTO \(table.name) (
+    //         \(columns)
+    //     )
+    //     VALUES
+    //         \(values);
+    //     """
+    // }]
 }
 
 sqlModel: #SQL & {
