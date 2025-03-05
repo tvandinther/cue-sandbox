@@ -8,13 +8,15 @@ import (
 #Value: {
     cue: string | bool | float | int | bytes | null
     sqliteType: "TEXT" | "REAL" | "INTEGER" | "BLOB" | "NULL"
-    sqlite: _ | *cue
+    sqlite: string | float | int | null// | *cue
 
     if (cue & string) != _|_ {
         sqliteType: "TEXT"
+        sqlite: cue
     }
     if (cue & int) != _|_ {
         sqliteType: "INTEGER"
+        sqlite: cue
     }
     if (cue & bool) != _|_ {
         sqliteType: "INTEGER"
@@ -27,12 +29,15 @@ import (
     }
     if (cue & float) != _|_ {
         sqliteType: "REAL"
+        sqlite: cue
     }
     if (cue & bytes) != _|_ {
         sqliteType: "BLOB"
+        sqlite: cue
     }
     if (cue & null) != _|_ {
         sqliteType: "NULL"
+        sqlite: cue
     }
 }
 
@@ -51,6 +56,7 @@ import (
     tables: list.Concat([_entity, _associative])
 
     _entity: [for sourceName, source in sources {
+        let keys = [for k, _ in source[0] {k}]
         #Table & {
             name: sourceName
             columns: [for k, v in source[0] if (v & [..._]) == _|_ {
@@ -66,7 +72,8 @@ import (
                 ][0]
             }]
             values: [for row in source {
-                [for k, v in row if (v & [..._]) == _|_ {
+                [for k in keys if (row[k] & [..._]) == _|_ {
+                    let v = row[k]
                     [
                         if (v & {...}) != _|_ { // if is struct
                             #Value & {cue: v.id}
@@ -81,6 +88,7 @@ import (
     }]
 
     _associative: [for sourceName, source in sources for key, value in source[0] if (value & [..._]) != _|_ {
+        let keys = [for k, _ in source[0] {k}]
         #Table & {
             name: "\(sourceName)_\(key)"
             columns: [{
@@ -90,7 +98,7 @@ import (
                 name: key
                 valueMetadata: #Value & {cue: value[0]}
             }]
-            values: [for row in source for field in row if (field & [..._]) != _|_ for v in field {
+            values: [for row in source for k in keys if (row[k] & [..._]) != _|_ for v in row[k] {
                 [#Value & {cue: row.id}, #Value & {cue: v}]
             }]
         }
