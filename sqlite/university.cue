@@ -19,14 +19,14 @@ sqlModel: #SQL & {
 }
 
 #Course: {
-    id: int
+    id: int & >0
     name: string
     faculty: #Faculty
     tags: [...string]
 }
 
 #Student: {
-    id: int
+    id: int & >0
     familyName: string
     givenName: string
     graduated: bool | *false
@@ -35,26 +35,26 @@ sqlModel: #SQL & {
 #Enrolment: {
     course: #Course
     student: #Student
-    note: string
+    note: string | *""
 }
 
-// _facultiesById is not yet closed. Consider changing to definition
-_facultiesById: [ID= =~ "\\d+"]: #Faculty & {id: strconv.ParseInt(ID, 10, 32)}
+#FacultyIndex: [ID= =~ "^\\d+$"]: #Faculty & {id: strconv.ParseInt(ID, 10, 32)}
+_facultiesById: #FacultyIndex
 faculties: [for faculty in _facultiesById {faculty}]
 
-// _coursesById is not yet closed. Consider changing to definition
-_coursesById: [ID= =~ "\\d+"]: #Course & {id: strconv.ParseInt(ID, 10, 32)}
+#CoursesIndex: [ID= =~ "^\\d+$"]: #Course & {id: strconv.ParseInt(ID, 10, 32)}
+_coursesById: #CoursesIndex
 courses: [for course in _coursesById {course}]
 
-// _studentsById is not yet closed. Consider changing to definition
-_studentsById: [ID= =~ "\\d+"]: #Student & {id: strconv.ParseInt(ID, 10, 32)}
+#StudentsIndex: [ID= =~ "^\\d+$"]: #Student & {id: strconv.ParseInt(ID, 10, 32)}
+_studentsById: #StudentsIndex
 students: [for student in _studentsById {student}]
 
-_enrolmentsByStudentByCourse: [StudentId=string]: [CourseId=string]: #Enrolment & {
+_enrolmentsByStudentIdByCourseId: [StudentId= =~ "^\\d+$"]: [CourseId= =~ "^\\d+$"]: #Enrolment & {
     course: _coursesById[CourseId]
     student: _studentsById[StudentId]
 }
-enrolments: [for byStudent in _enrolmentsByStudentByCourse for byCourse in byStudent {byCourse}]
+enrolments: [for byStudent in _enrolmentsByStudentIdByCourseId for byCourse in byStudent {byCourse}]
 
 _facultiesById: {
     "1": {name: "Science"}
@@ -85,13 +85,4 @@ _studentsById: {
     }
 }
 
-_enrolmentsByStudentByCourse: {for enrolment in _enrolmentsByStudentByCourseList {"\(enrolment.student.id)": "\(enrolment.course.id)": {enrolment}}}
-
-_enrolmentsByStudentByCourseList: [...#Enrolment]
-_enrolmentsByStudentByCourseList: [
-    {
-        student: _studentsById["1"]
-        course: _coursesById["1"]
-        note: "Special admission"
-    }
-]
+_enrolmentsByStudentIdByCourseId: "1": "1": note: "Special admission"
