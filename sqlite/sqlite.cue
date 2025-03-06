@@ -128,11 +128,3 @@ import (
     //     """
     // }]
 }
-
-sqlModel: #SQL & {
-    sources: {
-        "students": students
-        "courses": courses
-        "enrolments": enrolments
-    }
-}
