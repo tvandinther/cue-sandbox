@@ -1,5 +1,4 @@
-package app
-
+package platform
 
 import (
     "struct"

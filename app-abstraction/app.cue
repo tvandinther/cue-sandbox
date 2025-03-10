@@ -1,7 +1,9 @@
 package app
 
-#Deployment & {
-    let base = #App & {
+import "cue.example/platform"
+
+platform.#Deployment & {
+    let base = platform.#App & {
         AppName=name: "test-app"
         image: {
             registry: "my-registry.com"
