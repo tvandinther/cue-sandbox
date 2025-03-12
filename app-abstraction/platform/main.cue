@@ -39,13 +39,9 @@ import (
     }
 }
 
-#AppManifests: {
-    "ingress": {}
-    "service": {}
-    "deployment": {}
-}
+#App: #WebApp // | #OtherApp
 
-#App: {
+#WebApp: {
     name: #ConstrainedString
     image: {
         registry: string

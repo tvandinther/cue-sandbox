@@ -3,7 +3,7 @@ package app
 import "cue.example/platform"
 
 platform.#Deployment & {
-    let base = platform.#App & {
+    let base = platform.#WebApp & {
         AppName=name: "test-app"
         image: {
             registry: "my-registry.com"
